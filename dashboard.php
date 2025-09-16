@@ -49,8 +49,11 @@ if (!isset($_SESSION['usuario'])) {
 <a href="colaboradores.php" class="btn">Cadastrar Colaboradores</a>
 <a href="listar_colaboradores.php" class="btn">Listar Colaboradores</a>
 <a href="materiais.php" class="btn">Cadastrar Materiais</a>
+<a href="editar_material.php" class="btn">editar materiais</a> <!-- novo link -->
 <a href="associar_materiais.php" class="btn">Associar Materiais a Colaboradores</a>
+
 <a href="logout.php" class="btn logout">Sair</a>
+
 
 
 

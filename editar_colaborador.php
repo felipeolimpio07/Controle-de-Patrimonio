@@ -23,7 +23,22 @@ if (!isset($_GET['id'])) {
 $id = intval($_GET['id']);
 $msg = '';
 
-// Buscar dados atuais do colaborador
+// Processar exclusão, se acionado
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['deletar'])) {
+    $stmt_del = $conn->prepare("DELETE FROM colaboradores WHERE id = ?");
+    $stmt_del->bind_param("i", $id);
+    if ($stmt_del->execute()) {
+        $stmt_del->close();
+        $conn->close();
+        header("Location: listar_colaboradores.php?msg=Colaborador+deletado+com+sucesso");
+        exit();
+    } else {
+        $msg = "Erro ao deletar colaborador: " . $stmt_del->error;
+        $stmt_del->close();
+    }
+}
+
+// Busca dados do colaborador
 $stmt = $conn->prepare("SELECT nome, cpf, cargo FROM colaboradores WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
@@ -39,56 +54,38 @@ if ($result->num_rows === 0) {
 $colaborador = $result->fetch_assoc();
 $stmt->close();
 
-// Buscar lista de todos os materiais disponíveis
-$materiais_result = $conn->query("SELECT id, nome FROM materiais ORDER BY nome");
+// Busca somente os nomes dos materiais associados ao colaborador
+$stmtMat = $conn->prepare("
+    SELECT m.nome 
+    FROM materiais m
+    INNER JOIN colaborador_materiais cm ON m.id = cm.material_id
+    WHERE cm.colaborador_id = ?");
+$stmtMat->bind_param("i", $id);
+$stmtMat->execute();
+$resMat = $stmtMat->get_result();
 
-// Buscar materiais associados ao colaborador
 $materiais_associados = [];
-$stmt2 = $conn->prepare("SELECT material_id FROM colaborador_materiais WHERE colaborador_id = ?");
-$stmt2->bind_param("i", $id);
-$stmt2->execute();
-$res2 = $stmt2->get_result();
-while ($row = $res2->fetch_assoc()) {
-    $materiais_associados[] = $row['material_id'];
+while ($rowMat = $resMat->fetch_assoc()) {
+    $materiais_associados[] = $rowMat['nome'];  // Armazena nomes
 }
-$stmt2->close();
+$stmtMat->close();
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['deletar'])) {
     $nome = $_POST['nome'];
     $cpf = $_POST['cpf'];
     $cargo = $_POST['cargo'];
-    $materiais_selecionados = isset($_POST['materiais']) ? $_POST['materiais'] : [];
 
-    // Atualizar dados do colaborador
+    // Atualiza dados do colaborador
     $stmt_update = $conn->prepare("UPDATE colaboradores SET nome = ?, cpf = ?, cargo = ? WHERE id = ?");
     $stmt_update->bind_param("sssi", $nome, $cpf, $cargo, $id);
-    $stmt_update->execute();
+    if ($stmt_update->execute()) {
+        $msg = "Colaborador atualizado com sucesso!";
+    } else {
+        $msg = "Erro ao atualizar colaborador: " . $stmt_update->error;
+    }
     $stmt_update->close();
 
-    // Atualizar materiais associados
-    // Remove associações antigas
-    $stmt_del = $conn->prepare("DELETE FROM colaborador_materiais WHERE colaborador_id = ?");
-    $stmt_del->bind_param("i", $id);
-    $stmt_del->execute();
-    $stmt_del->close();
-
-    // Inserir novas associações
-    if (count($materiais_selecionados) > 0) {
-        $stmt_ins = $conn->prepare("INSERT INTO colaborador_materiais (colaborador_id, material_id) VALUES (?, ?)");
-        foreach ($materiais_selecionados as $material_id) {
-            $mat_id = intval($material_id);
-            $stmt_ins->bind_param("ii", $id, $mat_id);
-            $stmt_ins->execute();
-        }
-        $stmt_ins->close();
-    }
-
-    $msg = "Colaborador atualizado com sucesso!";
-
-    // Atualizar array para marcação
-    $materiais_associados = $materiais_selecionados;
-
-    // Atualizar dados exibidos
+    // Atualiza dados exibidos no formulário
     $colaborador['nome'] = $nome;
     $colaborador['cpf'] = $cpf;
     $colaborador['cargo'] = $cargo;
@@ -108,14 +105,31 @@ $conn->close();
     h2 { text-align: center; margin-bottom: 20px; }
     label { display: block; margin-top: 15px; font-weight: bold; }
     input[type="text"] { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-    .materiais-list { margin-top: 15px; }
-    .materiais-list label { font-weight: normal; }
-    button { margin-top: 20px; width: 100%; padding: 10px; background-color: #007bff; border: none; color: white; font-size: 16px; cursor: pointer; border-radius: 4px; }
-    button:hover { background-color: #0056b3; }
+    .materiais-list { margin-top: 15px; font-style: italic; }
+    button, .btn-delete {
+        margin-top: 20px; width: 100%; padding: 10px; font-size: 16px; border-radius: 4px; cursor: pointer;
+    }
+    button {
+        background-color: #007bff; border: none; color: white;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+    .btn-delete {
+        background-color: #dc3545; border: none; color: white;
+    }
+    .btn-delete:hover {
+        background-color: #a71d2a;
+    }
     .msg { margin-top: 15px; text-align: center; color: #28a745; }
     a { display: block; text-align: center; margin-top: 15px; text-decoration: none; color: #007bff; }
     a:hover { text-decoration: underline; }
 </style>
+<script>
+function confirmarExclusao() {
+    return confirm('Tem certeza que deseja excluir este colaborador? Esta ação não pode ser desfeita.');
+}
+</script>
 </head>
 <body>
 
@@ -138,16 +152,24 @@ $conn->close();
 
         <div class="materiais-list">
             <label>Materiais Associados:</label>
-            <?php while ($mat = $materiais_result->fetch_assoc()): ?>
-                <label>
-                    <input type="checkbox" name="materiais[]" value="<?php echo $mat['id']; ?>"
-                        <?php if (in_array($mat['id'], $materiais_associados)) echo 'checked'; ?>>
-                    <?php echo htmlspecialchars($mat['nome']); ?>
-                </label><br>
-            <?php endwhile; ?>
+            <p>
+                <?php 
+                if (count($materiais_associados) > 0) {
+                    echo htmlspecialchars(implode(', ', $materiais_associados));
+                } else {
+                    echo 'Nenhum material associado.';
+                }
+                ?>
+            </p>
         </div>
 
         <button type="submit">Atualizar</button>
+    </form>
+
+    <!-- Formulário para excluir colaborador -->
+    <form method="POST" action="" onsubmit="return confirmarExclusao();">
+        <input type="hidden" name="deletar" value="1" />
+        <button type="submit" class="btn-delete">Excluir Colaborador</button>
     </form>
 
     <a href="listar_colaboradores.php">Voltar à lista</a>

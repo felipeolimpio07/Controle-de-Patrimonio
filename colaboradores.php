@@ -6,6 +6,23 @@ if (!isset($_SESSION['usuario'])) {
     exit();
 }
 
+function validarCPF($cpf) {
+    $cpf = preg_replace('/[^0-9]/', '', $cpf);
+    if (strlen($cpf) != 11 || preg_match('/(\d)\1{10}/', $cpf)) {
+        return false;
+    }
+    for ($t = 9; $t < 11; $t++) {
+        for ($d = 0, $c = 0; $c < $t; $c++) {
+            $d += $cpf[$c] * (($t + 1) - $c);
+        }
+        $d = ((10 * $d) % 11) % 10;
+        if ($cpf[$c] != $d) {
+            return false;
+        }
+    }
+    return true;
+}
+
 $servername = "localhost";
 $db_username = "root";
 $db_password = "";
@@ -21,22 +38,28 @@ $msg = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nome = $_POST['nome'];
     $cpf = $_POST['cpf'];
-    $cargo = $_POST['cargo'];  // Novo campo
+    $cargo = $_POST['cargo'];
 
-    $sql = "INSERT INTO colaboradores (nome, cpf, cargo) VALUES (?, ?, ?)";
-    $stmt = $conn->prepare($sql);
-    if ($stmt === false) {
-        die("Erro na preparação da consulta: " . $conn->error);
-    }
-    $stmt->bind_param("sss", $nome, $cpf, $cargo);
+    // Limpar formatação do CPF para validar
+    $cpf_limpo = preg_replace('/[^0-9]/', '', $cpf);
 
-    if ($stmt->execute()) {
-        $msg = "Colaborador cadastrado com sucesso!";
+    if (!validarCPF($cpf_limpo)) {
+        $msg = "CPF inválido. Por favor, insira um CPF válido.";
     } else {
-        $msg = "Erro ao cadastrar colaborador: " . $stmt->error;
-    }
+        $sql = "INSERT INTO colaboradores (nome, cpf, cargo) VALUES (?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        if ($stmt === false) {
+            die("Erro na preparação da consulta: " . $conn->error);
+        }
+        $stmt->bind_param("sss", $nome, $cpf, $cargo);
 
-    $stmt->close();
+        if ($stmt->execute()) {
+            $msg = "Colaborador cadastrado com sucesso!";
+        } else {
+            $msg = "Erro ao cadastrar colaborador: " . $stmt->error;
+        }
+        $stmt->close();
+    }
 }
 
 $conn->close();
@@ -45,7 +68,7 @@ $conn->close();
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Cadastrar Colaboradores</title>
     <style>
         body { font-family: Arial, sans-serif; }
@@ -60,18 +83,73 @@ $conn->close();
         a { display: block; text-align: center; margin-top: 15px; text-decoration: none; color: #007bff; }
         a:hover { text-decoration: underline; }
     </style>
+    <script>
+        function mascaraCPF(input) {
+            let cpf = input.value.replace(/\D/g, '');
+            cpf = cpf.substring(0, 11);
+
+            cpf = cpf.replace(/^(\d{3})(\d)/, "$1.$2");
+            cpf = cpf.replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3");
+            cpf = cpf.replace(/\.(\d{3})(\d)/, ".$1-$2");
+
+            input.value = cpf;
+        }
+
+        function validarCPF(cpf) {
+            cpf = cpf.replace(/[^\d]+/g, '');
+            if (cpf == '') return false;
+            if (cpf.length != 11 ||
+                cpf == "00000000000" || cpf == "11111111111" ||
+                cpf == "22222222222" || cpf == "33333333333" ||
+                cpf == "44444444444" || cpf == "55555555555" ||
+                cpf == "66666666666" || cpf == "77777777777" ||
+                cpf == "88888888888" || cpf == "99999999999") 
+                return false;
+            let soma = 0;
+            let resto;
+            for (let i = 1; i <= 9; i++) {
+                soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
+            }
+            resto = (soma * 10) % 11;
+            if (resto == 10 || resto == 11)
+                resto = 0;
+            if (resto != parseInt(cpf.substring(9, 10)))
+                return false;
+            soma = 0;
+            for (let i = 1; i <= 10; i++) {
+                soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
+            }
+            resto = (soma *10) % 11;
+            if (resto == 10 || resto == 11)
+                resto = 0;
+            if (resto != parseInt(cpf.substring(10, 11)))
+                return false;
+            return true;
+        }
+
+        function validarFormulario() {
+            const cpfInput = document.getElementById('cpf');
+            const cpf = cpfInput.value;
+            if (!validarCPF(cpf)) {
+                alert("CPF inválido. Por favor, digite um CPF válido.");
+                cpfInput.focus();
+                return false;
+            }
+            return true;
+        }
+    </script>
 </head>
 <body>
 
 <div class="form-container">
     <h2>Cadastro de Colaboradores</h2>
 
-    <form method="POST" action="">
+    <form method="POST" action="" onsubmit="return validarFormulario();">
         <label for="nome">Nome:</label>
         <input type="text" id="nome" name="nome" required>
 
         <label for="cpf">CPF:</label>
-        <input type="text" id="cpf" name="cpf" maxlength="14" required>
+        <input type="text" id="cpf" name="cpf" maxlength="14" required oninput="mascaraCPF(this)">
 
         <label for="cargo">Cargo:</label>
         <input type="text" id="cargo" name="cargo" required>
@@ -80,7 +158,9 @@ $conn->close();
     </form>
 
     <?php if ($msg != ''): ?>
-        <p class="msg <?php echo strpos($msg, 'sucesso') !== false ? 'success' : '' ?>"><?php echo htmlspecialchars($msg); ?></p>
+        <p class="msg <?php echo strpos($msg, 'sucesso') !== false ? 'success' : '' ?>">
+            <?php echo htmlspecialchars($msg); ?>
+        </p>
     <?php endif; ?>
 
     <a href="dashboard.php">Voltar ao Dashboard</a>

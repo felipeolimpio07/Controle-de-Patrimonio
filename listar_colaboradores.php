@@ -90,7 +90,6 @@ if ($filtro != '') {
     <tbody>
         <?php while($row = $result->fetch_assoc()): ?>
         <tr>
-            <td><?php echo htmlspecialchars($row['id']); ?></td>
             <td><?php echo htmlspecialchars($row['nome']); ?></td>
             <td><?php echo htmlspecialchars($row['cpf']); ?></td>
             <td><?php echo htmlspecialchars($row['cargo']); ?></td>
