@@ -58,16 +58,64 @@ $conn->close();
     <title>Cadastro de Materiais</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 30px; }
-        .form-container { max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 6px; box-shadow: 2px 2px 10px #aaa; }
-        h2 { text-align: center; margin-bottom: 20px; }
-        label { display: block; margin-top: 15px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-        button { margin-top: 20px; width: 100%; padding: 10px; background-color: #007bff; border: none; color: white; font-size: 16px; cursor: pointer; border-radius: 4px; }
-        button:hover { background-color: #0056b3; }
-        p.msg { margin-top: 15px; text-align: center; color: #d63333; }
-        p.msg.success { color: #28a745; }
-        a { display: block; text-align: center; margin-top: 20px; text-decoration: none; color: #007bff; }
-        a:hover { text-decoration: underline; }
+        .form-container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-shadow: 2px 2px 10px #aaa;
+            text-align: center;
+        }
+        h2 { margin-bottom: 20px; }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: left;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        button, .btn {
+            margin-top: 20px;
+            padding: 10px 25px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            text-decoration: none;
+            display: inline-block;
+            font-family: Arial, sans-serif;
+        }
+        button:hover, .btn:hover {
+            background-color: #0056b3;
+        }
+        p.msg {
+            margin-top: 15px;
+            color: #d63333;
+        }
+        p.msg.success {
+            color: #28a745;
+        }
+        a {
+            display: inline-block;
+            margin-top: 15px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        /* Separação entre botões */
+        .btn + a, button + .btn {
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -83,7 +131,9 @@ $conn->close();
     </form>
 
     <?php if ($msg != ''): ?>
-        <p class="msg <?php echo strpos($msg, 'sucesso') !== false ? 'success' : '' ?>"><?php echo htmlspecialchars($msg); ?></p>
+        <p class="msg <?php echo strpos($msg, 'sucesso') !== false ? 'success' : '' ?>">
+            <?php echo htmlspecialchars($msg); ?>
+        </p>
     <?php endif; ?>
 
     <a href="dashboard.php">Voltar ao Dashboard</a>

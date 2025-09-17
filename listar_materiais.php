@@ -5,132 +5,84 @@ if (!isset($_SESSION['usuario'])) {
     exit();
 }
 
-include 'conexao.php';  // arquivo com a conexão ao banco
+$servername = "localhost";
+$db_username = "root";
+$db_password = "";
+$dbname = "auca_engenharia";
 
-// Verifica se o parâmetro id foi passado
-if (!isset($_GET['id'])) {
-    header("Location: listar_materiais.php");
-    exit();
+$conn = new mysqli($servername, $db_username, $db_password, $dbname);
+if ($conn->connect_error) {
+    die("Falha na conexão: " . $conn->connect_error);
 }
 
-$id = intval($_GET['id']);
-$msg = '';
-
-// Busca o material pelo id
-$stmt = $conn->prepare("SELECT nome FROM materiais WHERE id = ?");
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$result = $stmt->get_result();
-
-if ($result->num_rows === 0) {
-    $stmt->close();
-    $conn->close();
-    header("Location: listar_materiais.php");
-    exit();
-}
-
-$material = $result->fetch_assoc();
-$stmt->close();
-
-// Processa submissão do formulário
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $nome = trim($_POST['nome']);
-
-    if ($nome === '') {
-        $msg = "O nome do material não pode ser vazio.";
-    } else {
-        $stmt_update = $conn->prepare("UPDATE materiais SET nome = ? WHERE id = ?");
-        $stmt_update->bind_param("si", $nome, $id);
-        if ($stmt_update->execute()) {
-            $msg = "Material atualizado com sucesso!";
-            $material['nome'] = $nome;
-        } else {
-            $msg = "Erro ao atualizar material: " . $stmt_update->error;
-        }
-        $stmt_update->close();
-    }
-}
-
-$conn->close();
+$sql = "SELECT id, nome FROM materiais ORDER BY nome";
+$result = $conn->query($sql);
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8" />
-<title>Editar Material</title>
+<title>Lista de Materiais</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-    }
-    .form-container {
-        width: 400px;
-        margin: 50px auto;
-        padding: 20px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        box-shadow: 2px 2px 10px #aaa;
-    }
-    label {
-        display: block;
-        margin-top: 15px;
-        font-weight: bold;
-    }
-    input[type="text"] {
-        width: 100%;
-        padding: 8px;
-        margin-top: 5px;
-        box-sizing: border-box;
-    }
-    button {
-        margin-top: 20px;
-        width: 100%;
-        padding: 10px;
+    body { font-family: Arial, sans-serif; padding: 30px; }
+    table { border-collapse: collapse; width: 100%; max-width: 600px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #007bff; color: white; }
+    a.btn {
+        display: inline-block;
         background-color: #007bff;
-        border: none;
         color: white;
-        font-size: 16px;
-        cursor: pointer;
+        text-decoration: none;
+        padding: 7px 12px;
         border-radius: 4px;
+        font-size: 14px;
     }
-    button:hover {
+    a.btn:hover {
         background-color: #0056b3;
     }
-    .msg {
-        margin-top: 15px;
-        text-align: center;
-        color: #28a745;
-    }
-    a {
-        display: block;
-        text-align: center;
-        margin-top: 20px;
-        text-decoration: none;
-        color: #007bff;
-    }
-    a:hover {
-        text-decoration: underline;
+    .top-buttons {
+        margin-bottom: 20px;
     }
 </style>
 </head>
 <body>
 
-<div class="form-container">
-    <h2>Editar Material</h2>
+<h1>Lista de Materiais</h1>
 
-    <?php if ($msg): ?>
-        <p class="msg"><?php echo htmlspecialchars($msg); ?></p>
-    <?php endif; ?>
-
-    <form method="POST" action="">
-        <label for="nome">Nome do Material:</label>
-        <input type="text" id="nome" name="nome" required value="<?php echo htmlspecialchars($material['nome']); ?>">
-
-        <button type="submit">Salvar Alteração</button>
-    </form>
-
-    <a href="listar_materiais.php">Voltar à lista de Materiais</a>
+<div class="top-buttons">
+    <a href="materiais.php" class="btn">Cadastrar Novo Material</a>
+    <a href="dashboard.php" class="btn">Voltar ao Dashboard</a>
 </div>
+
+<?php if ($result->num_rows > 0): ?>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nome do Material</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php while($row = $result->fetch_assoc()): ?>
+        <tr>
+            <td><?php echo htmlspecialchars($row['id']); ?></td>
+            <td><?php echo htmlspecialchars($row['nome']); ?></td>
+            <td>
+                <a href="editar_material.php?id=<?php echo $row['id']; ?>" class="btn">Editar</a>
+            </td>
+        </tr>
+        <?php endwhile; ?>
+    </tbody>
+</table>
+<?php else: ?>
+<p>Nenhum material cadastrado.</p>
+<?php endif; ?>
 
 </body>
 </html>
+
+<?php
+$conn->close();
+?>
