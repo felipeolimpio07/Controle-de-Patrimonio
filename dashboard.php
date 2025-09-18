@@ -9,53 +9,33 @@ if (!isset($_SESSION['usuario'])) {
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Dashboard</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 30px;
-        }
-        h1 {
-            margin-bottom: 30px;
-        }
-        .btn {
-            display: inline-block;
-            padding: 12px 25px;
-            font-size: 16px;
-            color: white;
-            background-color: #007bff;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            text-decoration: none;
-            margin-right: 10px;
-        }
-        .btn:hover {
-            background-color: #3A943B;
-        }
-        .logout {
-            background-color: #dc3545;
-        }
-        .logout:hover {
-            background-color: #a71d2a;
-        }
-    </style>
+    <link rel="stylesheet" href="css/colaboradores_novo_usuario.css" />
 </head>
 <body>
 
-<h1>Bem-vindo, <?php echo htmlspecialchars($_SESSION['usuario']); ?>!</h1>
+<div class="navbar">
+    <img src="imagens/logo_nova.png" alt="Logo AUCA" class="logo">
+    <h1>Bem-vindo, <?php echo htmlspecialchars($_SESSION['usuario']); ?>!</h1>
+    <a href="logout.php" class="logout">Sair</a>
+</div>
 
-<a href="colaboradores.php" class="btn">Cadastrar Colaboradores</a>
-<a href="listar_colaboradores.php" class="btn">Listar Colaboradores</a>
-<a href="materiais.php" class="btn">Cadastrar Materiais</a>
-<a href="listar_materiais.php" class="btn">Editar Materiais</a> <!-- Botão adicionado -->
-<a href="novo_usuario.php" class="btn">Cadastrar novo usuário</a> <!-- Botão adicionado -->
+<div class="sidebar">
 
+    <a href="colaboradores.php">Cadastrar Colaboradores</a>
+    <a href="listar_colaboradores.php">Listar Colaboradores</a>
+    <a href="materiais.php">Cadastrar Materiais</a>
+    <a href="listar_materiais.php">Editar Materiais</a>
+    <a href="novo_usuario.php">Cadastrar novo usuário</a>
+    <a href="associar_materiais.php">Associar Materiais a Colaboradores</a>
 
-<a href="associar_materiais.php" class="btn">Associar Materiais a Colaboradores</a>
+</div>
 
-<a href="logout.php" class="btn logout">Sair</a>
+<div class="main-content">
+    <h1>Área de trabalho</h1>
+    <!-- Aqui o conteúdo do sistema -->
+</div>
 
 </body>
 </html>

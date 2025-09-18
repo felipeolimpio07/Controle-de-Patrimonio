@@ -1,0 +1,293 @@
+/* css/style.css - Estilo unificado para sistema */
+
+/* Corpo e fontes */
+body {
+    margin: 0;
+    padding: 15px;
+    font-family: Arial, sans-serif;
+    background-color: #668245; /* fundo verde dashboard */
+    color: white;
+    height: 100%;
+}
+
+/* Navbar */
+.navbar {
+    width: 100%;
+    height: 60px;
+    background-color: #668245;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    border-bottom: 2px solid black;
+    z-index: 1000;
+    justify-content: space-between;
+    color: white;
+}
+
+.navbar .logo {
+    height: 40px;
+}
+
+.navbar h1 {
+    margin: 0 auto;
+    font-size: 20px;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.navbar .logout {
+    background-color: #a71d2a;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.navbar .logout:hover {
+    background-color: #7c151c;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 250px;
+    background-color: #668245;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    height: calc(100vh - 60px);
+    padding: 10px;
+    box-sizing: border-box;
+    color: white;
+}
+
+.sidebar a {
+    color: white;
+    padding: 12px 20px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: bold;
+    background-color: transparent;
+    display: block;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.sidebar a:hover {
+    background-color: white;
+    color: #668245;
+}
+
+/* Conteúdo principal */
+.main-content {
+    margin-left: 250px;
+    padding: 90px 30px 30px;
+    background-color: white;
+    color: black;
+    min-height: calc(100vh - 60px);
+    border-radius: 8px;
+    box-sizing: border-box;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    box-shadow: 2px 2px 12px rgba(0,0,0,0.2);
+}
+
+/* Títulos */
+h1, h2 {
+    margin-top: 0;
+    margin-bottom: 30px;
+    text-align: center;
+    font-weight: bold;
+    color: black;
+}
+
+/* Formulários */
+form {
+    max-width: 450px;
+    margin: 0 auto;
+    color: black;
+}
+
+form.select-colaborador {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+input[type="text"],
+input[type="password"],
+select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+select:focus {
+    outline: none;
+    border-color: #668245;
+    box-shadow: 0 0 5px rgba(102,130,69,0.5);
+}
+
+/* Botões */
+button.btn, button {
+    background-color: #28a745;
+    border: none;
+    color: white;
+    padding: 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+}
+
+button.btn:hover, button:hover {
+    background-color: #218838;
+}
+
+/* Mensagens */
+.msg {
+    margin-top: 20px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.msg.success {
+    color: #28a745;
+}
+
+.msg.error {
+    color: #d63333;
+}
+
+/* Link voltar */
+.button-back, a.button-back {
+    display: inline-block;
+    margin-top: 15px;
+    color: #007bff;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    padding: 10px 0;
+    border-radius: 6px;
+    transition: background-color 0.3s ease;
+    max-width: 450px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.button-back:hover, a.button-back:hover {
+    background-color: rgba(0,123,255,0.1);
+    text-decoration: underline;
+}
+
+/* Tabela */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto 30px auto;
+    background-color: white;
+    color: black;
+    border-radius: 8px;
+    box-shadow: 2px 2px 12px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    text-align: left;
+    vertical-align: top;
+}
+
+th {
+    background-color: #28a745;
+    color: white;
+    font-weight: bold;
+}
+
+/* Botões ação na tabela */
+a.btn {
+    background-color: #007bff;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+}
+
+a.btn:hover {
+    background-color: #0056b3;
+}
+
+/* Lista checkbox de materiais estilo "cards" */
+.materiais-list {
+    max-width: 450px;
+    margin: 0 auto 20px auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    color: black;
+}
+
+.materiais-list label {
+    font-weight: normal;
+    background: white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    transition: box-shadow 0.3s ease;
+    width: 200px;
+}
+
+.materiais-list label:hover {
+    box-shadow: 0 4px 15px rgba(102,130,69,0.4);
+}
+
+.materiais-list input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+/* Mensagem "no materials" */
+.no-materials {
+    max-width: 450px;
+    margin: 0 auto 20px auto;
+    font-style: italic;
+    color: #555;
+    font-size: 1.1em;
+    text-align: center;
+}

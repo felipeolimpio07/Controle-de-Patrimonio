@@ -1,0 +1,199 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+    color: white;
+}
+
+/* Navbar fixa no topo */
+.navbar {
+    width: 100%;
+    height: 60px;
+    background-color: #668245;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    box-sizing: border-box;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    border-bottom: 2px solid black;
+    justify-content: space-between;
+}
+
+.navbar .logo {
+    max-height: 40px;
+    margin-right: 10px;
+}
+
+.navbar h1 {
+    margin: 0 auto;
+    font-size: 20px;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.navbar .logout {
+    color: white;
+    background-color: #a71d2a;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.navbar .logout:hover {
+    background-color: #7c151c;
+}
+
+/* Sidebar à esquerda */
+.sidebar {
+    width: 250px;
+    background-color: #668245;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    height: calc(100vh - 60px);
+    padding: 10px;
+    box-sizing: border-box;
+    color: white;
+}
+
+.sidebar h1 {
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.sidebar a {
+    color: white;
+    padding: 12px 20px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: bold;
+    background-color: transparent;
+    display: block;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.sidebar a:hover {
+    background-color: white;
+    color: #668245;
+}
+
+.sidebar a.logout {
+    background-color: transparent;
+    color: white;
+}
+
+.sidebar a.logout:hover {
+    background-color: #506831;
+    color: white;
+}
+
+/* Área principal - conteúdo */
+.main-content {
+    margin-left: 250px;
+    padding: 90px 30px 30px;
+    background-color: white;
+    color: black;
+    min-height: calc(100vh - 60px);
+    box-sizing: border-box;
+}
+
+/* Títulos */
+h1 {
+    margin-top: 0;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+/* Uso geral para formulários */
+form {
+    max-width: 400px;
+    margin: auto;
+}
+
+label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+input[type="text"], input[type="password"] {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+    outline: none;
+    border-color: #668245;
+    box-shadow: 0 0 5px rgba(102, 130, 69, 0.5);
+}
+
+button {
+    margin-top: 20px;
+    width: 100%;
+    padding: 10px;
+    background-color: #668245;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #506831;
+}
+
+/* Mensagens */
+.msg {
+    margin-top: 20px;
+    text-align: center;
+    font-weight: bold;
+    color: red;
+}
+
+.success {
+    color: green;
+}
+
+/* Botão voltar ou links similares */
+.button-back {
+    margin-left: 10px;
+    padding: 10px 15px;
+    background-color: #6c757d;
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.button-back:hover {
+    background-color: #565e64;
+}
+
+/* Centraliza títulos dentro da main content */
+.main-content h1 {
+    text-align: center;
+}

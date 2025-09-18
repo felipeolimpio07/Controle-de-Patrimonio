@@ -50,6 +50,7 @@ if ($filtro != '') {
 <head>
     <meta charset="UTF-8" />
     <title>Lista de Colaboradores</title>
+    
     <style>
         body { font-family: Arial, sans-serif; padding: 30px; }
         form { margin-bottom: 15px; }
