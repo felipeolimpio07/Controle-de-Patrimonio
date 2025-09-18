@@ -21,7 +21,6 @@ if (isset($_GET['filtro'])) {
 }
 
 if ($filtro != '') {
-    // Consulta com filtro e agregação dos materiais
     $sql = "SELECT c.id, c.nome, c.cpf, c.cargo, 
         GROUP_CONCAT(m.nome SEPARATOR ', ') AS materiais
         FROM colaboradores c
@@ -35,7 +34,6 @@ if ($filtro != '') {
     $stmt->execute();
     $result = $stmt->get_result();
 } else {
-    // Consulta sem filtro com agregação dos materiais
     $sql = "SELECT c.id, c.nome, c.cpf, c.cargo, 
         GROUP_CONCAT(m.nome SEPARATOR ', ') AS materiais
         FROM colaboradores c
@@ -90,11 +88,12 @@ if ($filtro != '') {
     <tbody>
         <?php while($row = $result->fetch_assoc()): ?>
         <tr>
+            <td><?php echo htmlspecialchars($row['id']); ?></td>
             <td><?php echo htmlspecialchars($row['nome']); ?></td>
             <td><?php echo htmlspecialchars($row['cpf']); ?></td>
             <td><?php echo htmlspecialchars($row['cargo']); ?></td>
             <td><?php echo htmlspecialchars($row['materiais'] ?? ''); ?></td>
-            <td><a href="editar_colaborador.php?id=<?php echo $row['id']; ?>">Editar</a></td>
+            <td><a href="editar_colaborador.php?id=<?php echo $row['id']; ?>" class="btn">Editar</a></td>
         </tr>
         <?php endwhile; ?>
     </tbody>
@@ -114,4 +113,3 @@ $conn->close();
 
 </body>
 </html>
-

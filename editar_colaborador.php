@@ -23,7 +23,41 @@ if (!isset($_GET['id'])) {
 $id = intval($_GET['id']);
 $msg = '';
 
-// Processar exclusão, se acionado
+// Atualizar dados do colaborador e suas associações
+if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['deletar'])) {
+    $nome = $_POST['nome'];
+    $cpf = $_POST['cpf'];
+    $cargo = $_POST['cargo'];
+    $materiais_selecionados = isset($_POST['materiais']) ? $_POST['materiais'] : [];
+
+    // Atualizar dados do colaborador
+    $stmt_update = $conn->prepare("UPDATE colaboradores SET nome = ?, cpf = ?, cargo = ? WHERE id = ?");
+    $stmt_update->bind_param("sssi", $nome, $cpf, $cargo, $id);
+    if ($stmt_update->execute()) {
+        $msg = "Colaborador atualizado com sucesso!";
+
+        // Atualizar associações de materiais
+        $stmt_del_mat = $conn->prepare("DELETE FROM colaborador_materiais WHERE colaborador_id = ?");
+        $stmt_del_mat->bind_param("i", $id);
+        $stmt_del_mat->execute();
+        $stmt_del_mat->close();
+
+        if (count($materiais_selecionados) > 0) {
+            $stmt_ins_mat = $conn->prepare("INSERT INTO colaborador_materiais (colaborador_id, material_id) VALUES (?, ?)");
+            foreach ($materiais_selecionados as $material_id) {
+                $mid = intval($material_id);
+                $stmt_ins_mat->bind_param("ii", $id, $mid);
+                $stmt_ins_mat->execute();
+            }
+            $stmt_ins_mat->close();
+        }
+    } else {
+        $msg = "Erro ao atualizar colaborador: " . $stmt_update->error;
+    }
+    $stmt_update->close();
+}
+
+// Processar exclusão do colaborador
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['deletar'])) {
     $stmt_del = $conn->prepare("DELETE FROM colaboradores WHERE id = ?");
     $stmt_del->bind_param("i", $id);
@@ -38,7 +72,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['deletar'])) {
     }
 }
 
-// Busca dados do colaborador
+// Buscar dados do colaborador
 $stmt = $conn->prepare("SELECT nome, cpf, cargo FROM colaboradores WHERE id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
@@ -54,42 +88,23 @@ if ($result->num_rows === 0) {
 $colaborador = $result->fetch_assoc();
 $stmt->close();
 
-// Busca somente os nomes dos materiais associados ao colaborador
+// Buscar somente os materiais associados ao colaborador para mostrar na lista
 $stmtMat = $conn->prepare("
-    SELECT m.nome 
+    SELECT m.id, m.nome 
     FROM materiais m
     INNER JOIN colaborador_materiais cm ON m.id = cm.material_id
-    WHERE cm.colaborador_id = ?");
+    WHERE cm.colaborador_id = ?
+    ORDER BY m.nome
+");
 $stmtMat->bind_param("i", $id);
 $stmtMat->execute();
 $resMat = $stmtMat->get_result();
 
 $materiais_associados = [];
 while ($rowMat = $resMat->fetch_assoc()) {
-    $materiais_associados[] = $rowMat['nome'];  // Armazena nomes
+    $materiais_associados[] = $rowMat;
 }
 $stmtMat->close();
-
-if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['deletar'])) {
-    $nome = $_POST['nome'];
-    $cpf = $_POST['cpf'];
-    $cargo = $_POST['cargo'];
-
-    // Atualiza dados do colaborador
-    $stmt_update = $conn->prepare("UPDATE colaboradores SET nome = ?, cpf = ?, cargo = ? WHERE id = ?");
-    $stmt_update->bind_param("sssi", $nome, $cpf, $cargo, $id);
-    if ($stmt_update->execute()) {
-        $msg = "Colaborador atualizado com sucesso!";
-    } else {
-        $msg = "Erro ao atualizar colaborador: " . $stmt_update->error;
-    }
-    $stmt_update->close();
-
-    // Atualiza dados exibidos no formulário
-    $colaborador['nome'] = $nome;
-    $colaborador['cpf'] = $cpf;
-    $colaborador['cargo'] = $cargo;
-}
 
 $conn->close();
 ?>
@@ -105,7 +120,8 @@ $conn->close();
     h2 { text-align: center; margin-bottom: 20px; }
     label { display: block; margin-top: 15px; font-weight: bold; }
     input[type="text"] { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-    .materiais-list { margin-top: 15px; font-style: italic; }
+    .materiais-list { margin-top: 15px; max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; }
+    .materiais-list label { font-weight: normal; display: block; cursor: pointer; margin-bottom: 5px; }
     button, .btn-delete {
         margin-top: 20px; width: 100%; padding: 10px; font-size: 16px; border-radius: 4px; cursor: pointer;
     }
@@ -152,21 +168,21 @@ function confirmarExclusao() {
 
         <div class="materiais-list">
             <label>Materiais Associados:</label>
-            <p>
-                <?php 
-                if (count($materiais_associados) > 0) {
-                    echo htmlspecialchars(implode(', ', $materiais_associados));
-                } else {
-                    echo 'Nenhum material associado.';
-                }
-                ?>
-            </p>
+            <?php if (count($materiais_associados) > 0): ?>
+                <?php foreach ($materiais_associados as $material): ?>
+                    <label>
+                        <input type="checkbox" name="materiais[]" value="<?php echo $material['id']; ?>" checked>
+                        <?php echo htmlspecialchars($material['nome']); ?>
+                    </label>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p>Nenhum material associado.</p>
+            <?php endif; ?>
         </div>
 
         <button type="submit">Atualizar</button>
     </form>
 
-    <!-- Formulário para excluir colaborador -->
     <form method="POST" action="" onsubmit="return confirmarExclusao();">
         <input type="hidden" name="deletar" value="1" />
         <button type="submit" class="btn-delete">Excluir Colaborador</button>

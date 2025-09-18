@@ -15,26 +15,21 @@ if ($conn->connect_error) {
     die("Falha na conexão: " . $conn->connect_error);
 }
 
-// Buscar lista de colaboradores
 $colaboradores_result = $conn->query("SELECT id, nome FROM colaboradores ORDER BY nome");
 
-// Inicializar variables
 $colaborador_id = 0;
 $msg = '';
 
-// Capturar colaborador selecionado via GET ou POST para persistência
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $colaborador_id = isset($_POST['colaborador_id']) ? intval($_POST['colaborador_id']) : 0;
     $materiais_selecionados = isset($_POST['materiais']) ? $_POST['materiais'] : [];
 
     if ($colaborador_id > 0) {
-        // Limpar associações existentes
         $stmt_del = $conn->prepare("DELETE FROM colaborador_materiais WHERE colaborador_id = ?");
         $stmt_del->bind_param("i", $colaborador_id);
         $stmt_del->execute();
         $stmt_del->close();
 
-        // Inserir novas associações, se houver
         if (count($materiais_selecionados) > 0) {
             $stmt_ins = $conn->prepare("INSERT INTO colaborador_materiais (colaborador_id, material_id) VALUES (?, ?)");
             foreach ($materiais_selecionados as $material_id) {
@@ -50,16 +45,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $msg = "Nenhum colaborador selecionado.";
     }
 } else {
-    // Em GET, buscar colaborador selecionado para manter form preenchido
     if (isset($_GET['colaborador_id'])) {
         $colaborador_id = intval($_GET['colaborador_id']);
     }
 }
 
-// Buscar materiais cadastrados
-$materiais_result = $conn->query("SELECT id, nome FROM materiais ORDER BY nome");
+$materiais_result = $conn->query("
+    SELECT id, nome FROM materiais
+    WHERE id NOT IN (SELECT material_id FROM colaborador_materiais)
+    ORDER BY nome
+");
 
-// Buscar materiais associados ao colaborador selecionado
 $materiais_associados = [];
 if ($colaborador_id > 0) {
     $stmt_mat = $conn->prepare("SELECT material_id FROM colaborador_materiais WHERE colaborador_id = ?");
@@ -81,22 +77,59 @@ $conn->close();
 <meta charset="UTF-8" />
 <title>Associar Materiais a Colaborador</title>
 <style>
-    body { font-family: Arial, sans-serif; padding: 30px; }
-    h2 { margin-bottom: 20px; }
+    body { font-family: Arial, sans-serif; padding: 30px; background-color: #f7f9fc; }
+    h2 { margin-bottom: 20px; color: #333; }
     label { display: block; margin-top: 10px; font-weight: bold; }
-    select, button { margin-top: 10px; padding: 8px; font-size: 16px; }
-    .materiais-list { margin-top: 20px; }
-    .materiais-list label { font-weight: normal; }
-    .msg { margin: 15px 0; color: #28a745; }
-    a { display: block; margin-top: 20px; text-decoration: none; color: #007bff; }
-    a:hover { text-decoration: underline; }
+    select, button { margin-top: 10px; padding: 8px 12px; font-size: 16px; border-radius: 6px; border: 1px solid #ccc; }
+    select:hover, button:hover { border-color: #007bff; }
+    button { background-color: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+    .materiais-list { 
+        margin-top: 20px; 
+        display: flex; 
+        flex-wrap: wrap; 
+        gap: 15px; 
+    }
+    .materiais-list label { 
+        font-weight: normal; 
+        background: white; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
+        border-radius: 8px; 
+        padding: 10px 15px; 
+        display: flex; 
+        align-items: center; 
+        cursor: pointer;
+        user-select: none;
+        transition: box-shadow 0.3s ease;
+        width: 200px;
+    }
+    .materiais-list label:hover {
+        box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+    }
+    .materiais-list input[type="checkbox"] {
+        margin-right: 10px;
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    .msg { 
+        margin: 15px 0; 
+        color: #28a745; 
+        font-weight: bold; 
+    }
+    .no-materials { 
+        margin-top: 20px; 
+        font-style: italic; 
+        color: #555; 
+        font-size: 1.1em; 
+    }
 </style>
 </head>
 <body>
 
 <h2>Associar Materiais a um Colaborador</h2>
 
-<form method="GET" action="">
+<form method="GET" action="" style="display: inline-block;">
     <label for="colaborador_id">Selecione o Colaborador:</label>
     <select id="colaborador_id" name="colaborador_id" onchange="this.form.submit()">
         <option value="0">-- Selecione --</option>
@@ -114,25 +147,27 @@ $conn->close();
         <p class="msg"><?php echo htmlspecialchars($msg); ?></p>
     <?php endif; ?>
 
-    <form method="POST" action="">
-        <input type="hidden" name="colaborador_id" value="<?php echo $colaborador_id; ?>" />
-
-        <div class="materiais-list">
-            <label>Materiais disponíveis:</label>
-            <?php foreach ($materiais_result as $mat): ?>
-                <label>
-                    <input type="checkbox" name="materiais[]" value="<?php echo $mat['id']; ?>"
-                        <?php if (in_array($mat['id'], $materiais_associados)) echo 'checked'; ?>>
-                    <?php echo htmlspecialchars($mat['nome']); ?>
-                </label><br>
-            <?php endforeach; ?>
-        </div>
-
-        <button type="submit">Salvar Associação</button>
-    </form>
+    <?php if ($materiais_result->num_rows > 0): ?>
+        <form method="POST" action="">
+            <input type="hidden" name="colaborador_id" value="<?php echo $colaborador_id; ?>" />
+            <div class="materiais-list">
+                <label>Materiais disponíveis:</label>
+                <?php foreach ($materiais_result as $mat): ?>
+                    <label>
+                        <input type="checkbox" name="materiais[]" value="<?php echo $mat['id']; ?>"
+                            <?php if (in_array($mat['id'], $materiais_associados)) echo 'checked'; ?>>
+                        <?php echo htmlspecialchars($mat['nome']); ?>
+                    </label>
+                <?php endforeach; ?>
+            </div>
+            <button type="submit">Salvar Associação</button>
+        </form>
+    <?php else: ?>
+        <p class="no-materials">Não há materiais disponíveis para associar.</p>
+    <?php endif; ?>
 <?php endif; ?>
 
-<a href="dashboard.php">Voltar ao Dashboard</a>
+<a href="dashboard.php" style="display: block; margin-top: 20px; text-decoration: none; color: #007bff;">Voltar ao Dashboard</a>
 
 </body>
 </html>

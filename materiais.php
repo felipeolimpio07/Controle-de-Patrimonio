@@ -23,16 +23,17 @@ $msg = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nome = trim($_POST['nome']);
+    $origem = trim($_POST['origem']);
 
-    if ($nome == '') {
-        $msg = "O nome do material não pode ser vazio.";
+    if ($nome == '' || $origem == '') {
+        $msg = "O nome e a origem do material não podem ser vazios.";
     } else {
-        $sql = "INSERT INTO materiais (nome) VALUES (?)";
+        $sql = "INSERT INTO materiais (nome, origem) VALUES (?, ?)";
         $stmt = $conn->prepare($sql);
         if ($stmt === false) {
             die("Erro na preparação da consulta: " . $conn->error);
         }
-        $stmt->bind_param("s", $nome);
+        $stmt->bind_param("ss", $nome, $origem);
 
         if ($stmt->execute()) {
             $msg = "Material cadastrado com sucesso!";
@@ -112,7 +113,6 @@ $conn->close();
         a:hover {
             text-decoration: underline;
         }
-        /* Separação entre botões */
         .btn + a, button + .btn {
             margin-left: 10px;
         }
@@ -126,6 +126,9 @@ $conn->close();
     <form method="POST" action="">
         <label for="nome">Nome do Material:</label>
         <input type="text" id="nome" name="nome" required>
+
+        <label for="origem">Origem do Material:</label>
+        <input type="text" id="origem" name="origem" placeholder="Escritório ou obra ?" required>
 
         <button type="submit">Cadastrar Material</button>
     </form>

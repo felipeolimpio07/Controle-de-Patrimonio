@@ -32,7 +32,7 @@ if (!isset($_SESSION['usuario'])) {
             margin-right: 10px;
         }
         .btn:hover {
-            background-color: #0056b3;
+            background-color: #3A943B;
         }
         .logout {
             background-color: #dc3545;
@@ -50,6 +50,9 @@ if (!isset($_SESSION['usuario'])) {
 <a href="listar_colaboradores.php" class="btn">Listar Colaboradores</a>
 <a href="materiais.php" class="btn">Cadastrar Materiais</a>
 <a href="listar_materiais.php" class="btn">Editar Materiais</a> <!-- Botão adicionado -->
+<a href="novo_usuario.php" class="btn">Cadastrar novo usuário</a> <!-- Botão adicionado -->
+
+
 <a href="associar_materiais.php" class="btn">Associar Materiais a Colaboradores</a>
 
 <a href="logout.php" class="btn logout">Sair</a>
