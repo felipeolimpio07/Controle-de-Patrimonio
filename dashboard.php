@@ -9,53 +9,75 @@ if (!isset($_SESSION['usuario'])) {
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="css/colaboradores_novo_usuario.css" />
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 30px;
+        /* Área principal para o carrossel */
+        .main-content {
+            margin-left: 250px;
+            padding: 90px 30px 30px;
+            background-color: white;
+            min-height: calc(100vh - 60px);
+            border-radius: 8px;
+            box-sizing: border-box;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 2px 2px 12px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
         }
-        h1 {
-            margin-bottom: 30px;
+
+        /* Container do carrossel */
+        .carousel {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
-        .btn {
-            display: inline-block;
-            padding: 12px 25px;
-            font-size: 16px;
-            color: white;
-            background-color: #007bff;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            text-decoration: none;
-            margin-right: 10px;
+
+        .carousel img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
         }
-        .btn:hover {
-            background-color: #3A943B;
-        }
-        .logout {
-            background-color: #dc3545;
-        }
-        .logout:hover {
-            background-color: #a71d2a;
+
+        .carousel img.active {
+            opacity: 1;
+            position: relative;
         }
     </style>
 </head>
 <body>
 
-<h1>Bem-vindo, <?php echo htmlspecialchars($_SESSION['usuario']); ?>!</h1>
+<div class="navbar">
+    <img src="imagens/logo_nova.png" alt="Logo AUCA" class="logo" />
+    <h1>Bem-vindo, <?php echo htmlspecialchars($_SESSION['usuario']); ?>!</h1>
+    <a href="logout.php" class="logout">Sair</a>
+</div>
 
-<a href="colaboradores.php" class="btn">Cadastrar Colaboradores</a>
-<a href="listar_colaboradores.php" class="btn">Listar Colaboradores</a>
-<a href="materiais.php" class="btn">Cadastrar Materiais</a>
-<a href="listar_materiais.php" class="btn">Editar Materiais</a> <!-- Botão adicionado -->
-<a href="novo_usuario.php" class="btn">Cadastrar novo usuário</a> <!-- Botão adicionado -->
+<div class="sidebar">
+    <a href="colaboradores.php">Cadastrar Colaboradores</a>
+    <a href="listar_colaboradores.php">Listar Colaboradores</a>
+    <a href="materiais.php">Cadastrar Materiais</a>
+    <a href="listar_materiais.php">Editar Materiais</a>
+    <a href="novo_usuario.php">Cadastrar novo usuário</a>
+    <a href="associar_materiais.php">Associar Materiais a Colaboradores</a>
+</div>
+
+<div class="main-content">
+    <h2>Dashboard</h2>
 
 
-<a href="associar_materiais.php" class="btn">Associar Materiais a Colaboradores</a>
-
-<a href="logout.php" class="btn logout">Sair</a>
 
 </body>
 </html>

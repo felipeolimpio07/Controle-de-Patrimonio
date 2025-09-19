@@ -22,53 +22,56 @@ if (!isset($_GET['id'])) {
 
 $id = intval($_GET['id']);
 $msg = '';
+$msgClass = '';
 
-// Atualizar dados do colaborador e suas associações
-if ($_SERVER["REQUEST_METHOD"] == "POST" && !isset($_POST['deletar'])) {
-    $nome = $_POST['nome'];
-    $cpf = $_POST['cpf'];
-    $cargo = $_POST['cargo'];
-    $materiais_selecionados = isset($_POST['materiais']) ? $_POST['materiais'] : [];
-
-    // Atualizar dados do colaborador
-    $stmt_update = $conn->prepare("UPDATE colaboradores SET nome = ?, cpf = ?, cargo = ? WHERE id = ?");
-    $stmt_update->bind_param("sssi", $nome, $cpf, $cargo, $id);
-    if ($stmt_update->execute()) {
-        $msg = "Colaborador atualizado com sucesso!";
-
-        // Atualizar associações de materiais
-        $stmt_del_mat = $conn->prepare("DELETE FROM colaborador_materiais WHERE colaborador_id = ?");
-        $stmt_del_mat->bind_param("i", $id);
-        $stmt_del_mat->execute();
-        $stmt_del_mat->close();
-
-        if (count($materiais_selecionados) > 0) {
-            $stmt_ins_mat = $conn->prepare("INSERT INTO colaborador_materiais (colaborador_id, material_id) VALUES (?, ?)");
-            foreach ($materiais_selecionados as $material_id) {
-                $mid = intval($material_id);
-                $stmt_ins_mat->bind_param("ii", $id, $mid);
-                $stmt_ins_mat->execute();
-            }
-            $stmt_ins_mat->close();
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    if (isset($_POST['deletar'])) {
+        // Deletar colaborador
+        $stmt_del = $conn->prepare("DELETE FROM colaboradores WHERE id = ?");
+        $stmt_del->bind_param("i", $id);
+        if ($stmt_del->execute()) {
+            $stmt_del->close();
+            $conn->close();
+            header("Location: listar_colaboradores.php?msg=Colaborador+deletado+com+sucesso");
+            exit();
+        } else {
+            $msg = "Erro ao deletar colaborador: " . $stmt_del->error;
+            $msgClass = "msg error";
+            $stmt_del->close();
         }
     } else {
-        $msg = "Erro ao atualizar colaborador: " . $stmt_update->error;
-    }
-    $stmt_update->close();
-}
+        // Atualizar colaborador
+        $nome = $_POST['nome'];
+        $cpf = $_POST['cpf'];
+        $cargo = $_POST['cargo'];
+        $materiais_selecionados = isset($_POST['materiais']) ? $_POST['materiais'] : [];
 
-// Processar exclusão do colaborador
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['deletar'])) {
-    $stmt_del = $conn->prepare("DELETE FROM colaboradores WHERE id = ?");
-    $stmt_del->bind_param("i", $id);
-    if ($stmt_del->execute()) {
-        $stmt_del->close();
-        $conn->close();
-        header("Location: listar_colaboradores.php?msg=Colaborador+deletado+com+sucesso");
-        exit();
-    } else {
-        $msg = "Erro ao deletar colaborador: " . $stmt_del->error;
-        $stmt_del->close();
+        $stmt_update = $conn->prepare("UPDATE colaboradores SET nome=?, cpf=?, cargo=? WHERE id=?");
+        $stmt_update->bind_param("sssi", $nome, $cpf, $cargo, $id);
+        if ($stmt_update->execute()) {
+            $msg = "Colaborador atualizado com sucesso!";
+            $msgClass = "msg success";
+
+            // Atualizar associações de materiais
+            $stmt_del_mat = $conn->prepare("DELETE FROM colaborador_materiais WHERE colaborador_id=?");
+            $stmt_del_mat->bind_param("i", $id);
+            $stmt_del_mat->execute();
+            $stmt_del_mat->close();
+
+            if (count($materiais_selecionados) > 0) {
+                $stmt_ins_mat = $conn->prepare("INSERT INTO colaborador_materiais (colaborador_id, material_id) VALUES (?, ?)");
+                foreach ($materiais_selecionados as $material_id) {
+                    $mid = intval($material_id);
+                    $stmt_ins_mat->bind_param("ii", $id, $mid);
+                    $stmt_ins_mat->execute();
+                }
+                $stmt_ins_mat->close();
+            }
+        } else {
+            $msg = "Erro ao atualizar colaborador: " . $stmt_update->error;
+            $msgClass = "msg error";
+        }
+        $stmt_update->close();
     }
 }
 
@@ -88,9 +91,9 @@ if ($result->num_rows === 0) {
 $colaborador = $result->fetch_assoc();
 $stmt->close();
 
-// Buscar somente os materiais associados ao colaborador para mostrar na lista
+// Buscar materiais associados
 $stmtMat = $conn->prepare("
-    SELECT m.id, m.nome 
+    SELECT m.id, m.nome
     FROM materiais m
     INNER JOIN colaborador_materiais cm ON m.id = cm.material_id
     WHERE cm.colaborador_id = ?
@@ -114,33 +117,8 @@ $conn->close();
 <head>
 <meta charset="UTF-8" />
 <title>Editar Colaborador</title>
-<style>
-    body { font-family: Arial, sans-serif; }
-    .form-container { width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 6px; box-shadow: 2px 2px 10px #aaa; }
-    h2 { text-align: center; margin-bottom: 20px; }
-    label { display: block; margin-top: 15px; font-weight: bold; }
-    input[type="text"] { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
-    .materiais-list { margin-top: 15px; max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px; background: #fafafa; }
-    .materiais-list label { font-weight: normal; display: block; cursor: pointer; margin-bottom: 5px; }
-    button, .btn-delete {
-        margin-top: 20px; width: 100%; padding: 10px; font-size: 16px; border-radius: 4px; cursor: pointer;
-    }
-    button {
-        background-color: #007bff; border: none; color: white;
-    }
-    button:hover {
-        background-color: #0056b3;
-    }
-    .btn-delete {
-        background-color: #dc3545; border: none; color: white;
-    }
-    .btn-delete:hover {
-        background-color: #a71d2a;
-    }
-    .msg { margin-top: 15px; text-align: center; color: #28a745; }
-    a { display: block; text-align: center; margin-top: 15px; text-decoration: none; color: #007bff; }
-    a:hover { text-decoration: underline; }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="css/colaboradores_novo_usuario.css" />
 <script>
 function confirmarExclusao() {
     return confirm('Tem certeza que deseja excluir este colaborador? Esta ação não pode ser desfeita.');
@@ -149,11 +127,26 @@ function confirmarExclusao() {
 </head>
 <body>
 
-<div class="form-container">
+<div class="navbar">
+    <img src="imagens/logo_nova.png" alt="Logo AUCA" class="logo" />
+    <h1>Bem-vindo, <?php echo htmlspecialchars($_SESSION['usuario']); ?>!</h1>
+    <a href="logout.php" class="logout">Sair</a>
+</div>
+
+<div class="sidebar">
+    <a href="colaboradores.php">Cadastrar Colaboradores</a>
+    <a href="listar_colaboradores.php">Listar Colaboradores</a>
+    <a href="materiais.php">Cadastrar Materiais</a>
+    <a href="listar_materiais.php">Editar Materiais</a>
+    <a href="novo_usuario.php">Cadastrar novo usuário</a>
+    <a href="associar_materiais.php">Associar Materiais a Colaboradores</a>
+</div>
+
+<div class="main-content">
     <h2>Editar Colaborador</h2>
 
     <?php if ($msg): ?>
-        <p class="msg"><?php echo htmlspecialchars($msg); ?></p>
+        <p class="<?php echo $msgClass; ?>"><?php echo htmlspecialchars($msg); ?></p>
     <?php endif; ?>
 
     <form method="POST" action="">
@@ -188,7 +181,6 @@ function confirmarExclusao() {
         <button type="submit" class="btn-delete">Excluir Colaborador</button>
     </form>
 
-    <a href="listar_colaboradores.php">Voltar à lista</a>
 </div>
 
 </body>

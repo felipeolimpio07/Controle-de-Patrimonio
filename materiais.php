@@ -20,13 +20,15 @@ if ($conn->connect_error) {
 }
 
 $msg = '';
+$msgClass = '';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nome = trim($_POST['nome']);
     $origem = trim($_POST['origem']);
 
-    if ($nome == '' || $origem == '') {
+    if ($nome === '' || $origem === '') {
         $msg = "O nome e a origem do material não podem ser vazios.";
+        $msgClass = "msg error";
     } else {
         $sql = "INSERT INTO materiais (nome, origem) VALUES (?, ?)";
         $stmt = $conn->prepare($sql);
@@ -37,14 +39,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if ($stmt->execute()) {
             $msg = "Material cadastrado com sucesso!";
+            $msgClass = "msg success";
         } else {
             if ($conn->errno == 1062) {
                 $msg = "Material já cadastrado.";
+                $msgClass = "msg error";
             } else {
-                $msg = "Erro ao cadastrar material: " . $stmt->error;
+                $msg = "Erro ao cadastrar material: " . htmlspecialchars($stmt->error);
+                $msgClass = "msg error";
             }
         }
-
         $stmt->close();
     }
 }
@@ -52,76 +56,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $conn->close();
 ?>
 
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8" />
     <title>Cadastro de Materiais</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 30px; }
-        .form-container {
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            box-shadow: 2px 2px 10px #aaa;
-            text-align: center;
-        }
-        h2 { margin-bottom: 20px; }
-        label {
-            display: block;
-            margin-top: 15px;
-            font-weight: bold;
-            text-align: left;
-        }
-        input[type="text"] {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            box-sizing: border-box;
-        }
-        button, .btn {
-            margin-top: 20px;
-            padding: 10px 25px;
-            background-color: #007bff;
-            border: none;
-            color: white;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 4px;
-            text-decoration: none;
-            display: inline-block;
-            font-family: Arial, sans-serif;
-        }
-        button:hover, .btn:hover {
-            background-color: #0056b3;
-        }
-        p.msg {
-            margin-top: 15px;
-            color: #d63333;
-        }
-        p.msg.success {
-            color: #28a745;
-        }
-        a {
-            display: inline-block;
-            margin-top: 15px;
-            color: #007bff;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        .btn + a, button + .btn {
-            margin-left: 10px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="css/colaboradores_novo_usuario.css" />
 </head>
 <body>
 
-<div class="form-container">
+<div class="navbar">
+    <img src="imagens/logo_nova.png" alt="Logo AUCA" class="logo" />
+    <h1>Bem-vindo, <?php echo htmlspecialchars($_SESSION['usuario']); ?>!</h1>
+    <a href="logout.php" class="logout">Sair</a>
+</div>
+
+<div class="sidebar">
+    <a href="colaboradores.php">Cadastrar Colaboradores</a>
+    <a href="listar_colaboradores.php">Listar Colaboradores</a>
+    <a href="materiais.php">Cadastrar Materiais</a>
+    <a href="listar_materiais.php">Editar Materiais</a>
+    <a href="novo_usuario.php">Cadastrar novo usuário</a>
+    <a href="associar_materiais.php">Associar Materiais a Colaboradores</a>
+</div>
+
+<div class="main-content">
     <h2>Cadastro de Materiais</h2>
+
+    <?php if ($msg !== ''): ?>
+        <p class="<?php echo $msgClass; ?>">
+            <?php echo htmlspecialchars($msg); ?>
+        </p>
+    <?php endif; ?>
 
     <form method="POST" action="">
         <label for="nome">Nome do Material:</label>
@@ -133,13 +101,6 @@ $conn->close();
         <button type="submit">Cadastrar Material</button>
     </form>
 
-    <?php if ($msg != ''): ?>
-        <p class="msg <?php echo strpos($msg, 'sucesso') !== false ? 'success' : '' ?>">
-            <?php echo htmlspecialchars($msg); ?>
-        </p>
-    <?php endif; ?>
-
-    <a href="dashboard.php">Voltar ao Dashboard</a>
 </div>
 
 </body>
